@@ -1,0 +1,4 @@
+[-] change Content-Type to Accept
+[-] javascript/css example
+[-] travis-ci
+[-] licenses

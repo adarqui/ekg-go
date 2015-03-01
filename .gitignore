@@ -1,3 +1,4 @@
 *.swp
 examples/metrics-test/metrics-test
+examples/encode-test/encode-test
 dev

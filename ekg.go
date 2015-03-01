@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/adarqui/ekg-core-go"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -31,9 +32,12 @@ func ForkServerWith(store *ekg_core.Store, bind string) (*Server, error) {
 
 	io := &http.Server{
 		Addr:           bind,
-		Handler:        serverHandler{server, serveHTTP},
+		Handler:        serverHandler{server, serve},
 		MaxHeaderBytes: 1 << 20,
 	}
+
+	fs := http.FileServer(http.Dir("assets"))
+	http.Handle("/assets", fs)
 
 	server.io = io
 	server.store = store
@@ -45,11 +49,25 @@ func ForkServerWith(store *ekg_core.Store, bind string) (*Server, error) {
 }
 
 func (sh serverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	serveHTTP(sh.server, w, r)
+	serve(sh.server, w, r)
 }
 
-func serveHTTP(server *Server, w http.ResponseWriter, r *http.Request) {
-	v := server.store.SampleAll()
+func serve(server *Server, w http.ResponseWriter, r *http.Request) {
+	fs := http.StripPrefix("/assets/", http.FileServer(http.Dir("/root/projects/go/src/github.com/adarqui/ekg-go/assets/")))
+	url := r.URL.Path
+	if strings.HasPrefix(url, "/index.html") {
+		http.Redirect(w, r, "/assets/", 0)
+	} else if strings.HasPrefix(url, "/assets/") {
+		fs.ServeHTTP(w, r)
+	} else {
+		serveMetrics(server, w, r)
+		//        http.NotFound(w, r)
+	}
+}
+
+func serveMetrics(server *Server, w http.ResponseWriter, r *http.Request) {
+	v := EncodeAll(server.store.SampleAll())
+
 	switch r.Header.Get("Content-Type") {
 	case "application/json":
 		{
@@ -74,6 +92,15 @@ func serveHTTP(server *Server, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+
+/*
+func (server *Server) serveAll() {
+//    metrics := server.store.SampleAll()
+}
+
+func (server *Server) serveOne(pathInfo string) {
+}
+*/
 
 func (server *Server) GetStore() *ekg_core.Store {
 	return server.store

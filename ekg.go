@@ -2,11 +2,11 @@ package ekg
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/adarqui/ekg-core-go"
 	"net/http"
 	"strings"
 	"time"
-    "fmt"
 )
 
 type Server struct {
@@ -119,6 +119,14 @@ func (server *Server) GetLabel(name string) *ekg_core.Label {
 
 func (server *Server) GetDistribution(name string) *ekg_core.Distribution {
 	return server.store.CreateDistribution(name)
+}
+
+func (server *Server) GetTimestamp(name string) *ekg_core.Timestamp {
+	return server.store.CreateTimestamp(name)
+}
+
+func (server *Server) GetBool(name string) *ekg_core.Bool {
+	return server.store.CreateBool(name)
 }
 
 func getTimeMs(void interface{}) interface{} {

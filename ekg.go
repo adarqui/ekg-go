@@ -2,11 +2,11 @@ package ekg
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/adarqui/ekg-core-go"
 	"net/http"
 	"strings"
 	"time"
+    "fmt"
 )
 
 type Server struct {
@@ -67,7 +67,6 @@ func serve(server *Server, w http.ResponseWriter, r *http.Request) {
 
 func serveMetrics(server *Server, w http.ResponseWriter, r *http.Request) {
 	v := EncodeAll(server.store.SampleAll())
-
 	switch r.Header.Get("Content-Type") {
 	case "application/json":
 		{

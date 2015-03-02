@@ -66,8 +66,8 @@ func serve(server *Server, w http.ResponseWriter, r *http.Request) {
 }
 
 func serveMetrics(server *Server, w http.ResponseWriter, r *http.Request) {
-	v := EncodeAll(server.store.SampleAll())
-	switch r.Header.Get("Content-Type") {
+	v := server.Encode(r.URL.Path)
+	switch r.Header.Get("Accept") {
 	case "application/json":
 		{
 			js, err := json.Marshal(v)
@@ -79,10 +79,12 @@ func serveMetrics(server *Server, w http.ResponseWriter, r *http.Request) {
 		}
 	case "application/xml":
 		{
+			w.Header().Set("Content-Type", "application/xml")
 			fmt.Fprintf(w, "xml")
 		}
 	case "application/html":
 		{
+			w.Header().Set("Content-Type", "application/html")
 			fmt.Fprintf(w, "html")
 		}
 	default:

@@ -19,38 +19,26 @@ data MetricType =
     | DistributionType
 */
 
-/*
-func metricType (v interface{}) string {
-    return "a"
-}
-*/
-
-/*
-func EncodeAll(metrics map[string]ekg_core.Value) map[string]value {
-	m := make(map[string]value)
-	for k, v := range metrics {
-		m[k] = EncodeMetric(v)
+func (server *Server) Encode(path string) map[string]interface{} {
+	metrics := server.store.SampleAll()
+	m := make(map[string]interface{})
+	if path == "/" {
+		EncodeAll(metrics, m)
+	} else {
+		EncodeOne(path[1:len(path)], metrics, m)
 	}
 	return m
 }
-*/
-func EncodeAll(metrics map[string]ekg_core.Value) map[string]interface{} {
-	m := make(map[string]interface{})
+
+func EncodeAll(metrics map[string]ekg_core.Value, m map[string]interface{}) {
 	for k, _ := range metrics {
 		EncodeOne(k, metrics, m)
 	}
-	return m
 }
 
 func EncodeOne(path string, metrics map[string]ekg_core.Value, m map[string]interface{}) {
 	paths := strings.Split(path, ".")
-	s := strings.Map(func(ch rune) rune {
-		if ch == '/' {
-			return '.'
-		} else {
-			return ch
-		}
-	}, path)
+	s := strings.Map(slashes2dots, path)
 	if val, ok := metrics[s]; ok {
 		nestedMaps(paths, 0, EncodeMetric(val), m)
 	}
@@ -96,5 +84,13 @@ func nestedMaps(paths []string, index int, v value, m map[string]interface{}) {
 		} else {
 			nestedMaps(paths, index+1, v, m2)
 		}
+	}
+}
+
+func slashes2dots(ch rune) rune {
+	if ch == '/' {
+		return '.'
+	} else {
+		return ch
 	}
 }

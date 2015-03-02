@@ -2,7 +2,7 @@
 
 curlit() {
     header="$1"
-    curl -H "Content-Type: $header" http://localhost:8111
+    curl -H "Accept: $header" http://localhost:8111
 }
 
 curlit 'application/json'

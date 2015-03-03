@@ -14,6 +14,8 @@ func main() {
 	gauge := serv.GetGauge("app.loop.gauge")
 	label := serv.GetLabel("app.loop.label")
 	distr := serv.GetDistribution("app.loop.distribution")
+    boolean := serv.GetBool("app.loop.bool")
+    timestamp := serv.GetTimestamp("app.loop.timestamp")
 
 	go func() {
 		// app loop
@@ -25,6 +27,8 @@ func main() {
 			gauge.Set(i)
 			label.Modify(func(s string) string { return fmt.Sprintf("%s%s", s, strconv.Itoa(int(i))) })
 			distr.Add(i)
+            boolean.True()
+            timestamp.Stamp()
 		}
 	}()
 

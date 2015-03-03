@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/adarqui/ekg-core-go"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -53,55 +52,28 @@ func (sh serverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func serve(server *Server, w http.ResponseWriter, r *http.Request) {
-	fs := http.StripPrefix("/assets/", http.FileServer(http.Dir("/root/projects/go/src/github.com/adarqui/ekg-go/assets/")))
-	url := r.URL.Path
-	if strings.HasPrefix(url, "/index.html") {
-		http.Redirect(w, r, "/assets/", 0)
-	} else if strings.HasPrefix(url, "/assets/") {
-		fs.ServeHTTP(w, r)
-	} else {
+	if r.Header.Get("Accept") == "application/json" {
 		serveMetrics(server, w, r)
-		//        http.NotFound(w, r)
+	} else {
+		serveApp(server, w, r)
 	}
+}
+
+func serveApp(server *Server, w http.ResponseWriter, r *http.Request) {
+	fs := http.StripPrefix("/assets/", http.FileServer(http.Dir("/root/projects/go/src/github.com/adarqui/ekg-go/assets/")))
+	fs.ServeHTTP(w, r)
 }
 
 func serveMetrics(server *Server, w http.ResponseWriter, r *http.Request) {
-	v := server.Encode(r.URL.Path)
-	switch r.Header.Get("Accept") {
-	case "application/json":
-		{
-			js, err := json.Marshal(v)
-			if err != nil {
-				return
-			}
-			w.Header().Set("Content-Type", "application/json")
-			fmt.Fprintf(w, string(js))
-		}
-	case "application/xml":
-		{
-			w.Header().Set("Content-Type", "application/xml")
-			fmt.Fprintf(w, "xml")
-		}
-	case "application/html":
-		{
-			w.Header().Set("Content-Type", "application/html")
-			fmt.Fprintf(w, "html")
-		}
-	default:
-		{
-			fmt.Fprintf(w, "error")
-		}
+	dotted := slashes2dots(r.URL.Path)
+	v := server.Encode(dotted)
+	js, err := json.Marshal(v)
+	if err != nil {
+		return
 	}
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, string(js))
 }
-
-/*
-func (server *Server) serveAll() {
-//    metrics := server.store.SampleAll()
-}
-
-func (server *Server) serveOne(pathInfo string) {
-}
-*/
 
 func (server *Server) GetStore() *ekg_core.Store {
 	return server.store

@@ -27,7 +27,7 @@ func main() {
 			gauge.Set(i)
 			label.Modify(func(s string) string { return fmt.Sprintf("%s%s", s, strconv.Itoa(int(i))) })
 			distr.Add(i)
-            boolean.True()
+            boolean.Toggle()
             timestamp.Stamp()
 		}
 	}()

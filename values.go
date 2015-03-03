@@ -19,26 +19,37 @@ data MetricType =
     | DistributionType
 */
 
-func (server *Server) Encode(path string) map[string]interface{} {
+// TODO: REFACTOR
+func (server *Server) Encode(path string) interface{} {
 	metrics := server.store.SampleAll()
-	m := make(map[string]interface{})
-	if path == "/" {
+	if path == "." {
+		m := make(map[string]interface{})
 		EncodeAll(metrics, m)
+		return m
 	} else {
-		EncodeOne(path[1:len(path)], metrics, m)
+		return EncodeOne(path[1:len(path)], metrics)
 	}
-	return m
 }
 
+// TODO: REFACTOR
 func EncodeAll(metrics map[string]ekg_core.Value, m map[string]interface{}) {
 	for k, _ := range metrics {
-		EncodeOne(k, metrics, m)
+		EncodeNested(k, metrics, m)
 	}
 }
 
-func EncodeOne(path string, metrics map[string]ekg_core.Value, m map[string]interface{}) {
+// TODO: REFACTOR
+func EncodeOne(path string, metrics map[string]ekg_core.Value) interface{} {
+	if val, ok := metrics[path]; ok {
+		return EncodeMetric(val)
+	}
+	return nil
+}
+
+// TODO: REFACTOR
+func EncodeNested(path string, metrics map[string]ekg_core.Value, m map[string]interface{}) {
 	paths := strings.Split(path, ".")
-	s := strings.Map(slashes2dots, path)
+	s := slashes2dots(path)
 	if val, ok := metrics[s]; ok {
 		nestedMaps(paths, 0, EncodeMetric(val), m)
 	}
@@ -63,7 +74,7 @@ func EncodeMetric(metric ekg_core.Value) value {
 	}
 }
 
-// eek
+// TODO: REFACTOR
 func nestedMaps(paths []string, index int, v value, m map[string]interface{}) {
 
 	if index >= len(paths) {
@@ -87,9 +98,25 @@ func nestedMaps(paths []string, index int, v value, m map[string]interface{}) {
 	}
 }
 
-func slashes2dots(ch rune) rune {
+func slashes2dots(s string) string {
+	return strings.Map(slash2dot, s)
+}
+
+func slash2dot(ch rune) rune {
 	if ch == '/' {
 		return '.'
+	} else {
+		return ch
+	}
+}
+
+func dots2slashes(s string) string {
+	return strings.Map(dot2slash, s)
+}
+
+func dot2slash(ch rune) rune {
+	if ch == '.' {
+		return '/'
 	} else {
 		return ch
 	}
